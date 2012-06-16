@@ -1,0 +1,31 @@
+Welcome to deContiki!
+
+deContiki is a branch of the Contiki operating system (see: http://www.contiki-os.org/)
+featuring a 6LoWPAN Neighbor Discovery Proxy Gateway (6LP-GW) running on the 
+deRFgateway for ARM hardware platform provided by Dresden Elektronik (http://www.dresden-elektronik.de).
+Since the 6LP-GW implements the ND Optimization for LLNs (http://tools.ietf.org/html/draft-ietf-6lowpan-nd-18),
+the adapted network stack including this ND optimization for for 6LoWPAN hosts is included too.
+It currently supports the deRFnode platform with ATmega128RFA1 based radio modules by Dresden Elektronik.
+
+Main Features
+=============
+The software running on the deRFgateway platform provides (amongst others) the 
+following features:
+- Real multiple network interfaces, i.e. an stand-alone Ethernet interface in addition to the radio interface.
+- Dual IPv4/IPv6 network stack.
+- 6LP-GW for easy integration of a 6LoWPAN network into an existing IP infrastructure.
+- "local host" component: beside the 6LP-GW component which does the proxying and forwarding
+  between the 6LoWPAN and the LAN, the local host component acts as an IP host in the attached Ethernet LAN
+  and allows thus to run additional applications (for example a CoAP/HTTP proxy).
+
+Additional Features
+===================
+The software provided for the deRFnode platform provides:
+- Platform-specific Contiki drivers for the deRFnode
+- A modified network stack implementing the ND Optimization for LLNs
+  
+For more details refer to examples/deRFgateway/README and examples/deRFnode/README, respectively.
+
+For details regarding the background and the design of the 6LP-GW see 
+http://web.it.kth.se/~maguire/DEGREE-PROJECT-REPORTS/111221-Luis_Maqueda-with-cover.pdf
+by Luis Maqueda Ara, who also contributed the present implementation.
