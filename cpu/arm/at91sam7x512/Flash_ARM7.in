@@ -1,0 +1,51 @@
+# -----------------------------------------------------------------------------
+# This file _may_ be included in a projects makefile (before 1st make target). 
+# It enables flashing/resetting the target device through optional make targets. 
+# Since not all customers may like OpenOCD, they might write their own flash 
+# script or completely skip its inclusion.
+# -----------------------------------------------------------------------------
+OPENOCDPATH = "C:/Programme/openocd-x64-0.5.0"
+OPENOCD     = $(OPENOCDPATH)/bin/openocd-x64-0.5.0.exe
+
+# when having problems resetting/flashing the arm core (e.g. 'JTAG-Error 
+# while reading CPSR'), try to slow down the JTAG clock ('jtag_khz' in board config).
+# By the way, it is recommended to skip a jtag speed definition since this 
+# enables openocd to dynamically scale the frequency used. 
+#OOFLAGS0 =  -f $(OPENOCDPATH)/share/openocd/scripts/interface/jlink.cfg -f $(OPENOCDPATH)/share/openocd/scripts/target/at91sam7x512.cfg
+OOFLAGS0 =  -f $(OPENOCDPATH)/interface/jlink.cfg -f $(OPENOCDPATH)/target/at91sam7x512.cfg
+OOFLAGS0 += -c "arm7_9 fast_memory_access enable"
+OOFLAGS0 += -c "arm7_9 dcc_downloads enable"
+OOFLAGS0 += -d0
+OOFLAGS0 += -c init 
+OOFLAGS0 += -c "reset_config srst_only"
+ 
+OOFLAGS1 += -c "halt 100"
+OOFLAGS2 += -c "flash write_bank 0 
+OOFLAGS3 += 0"
+
+OOGPNVM2SET = -c "at91sam7 gpnvm 2 set"
+OOGPNVM2CLR = -c "at91sam7 gpnvm 2 clear"
+
+OOFLAGS4 += -c "reset run"
+OOFLAGS4 += -c shutdown
+
+## TODO: since some processor registers are left in the previous state 
+# a complete reset needs some more work
+OOFLAGS5 += -c "soft_reset_halt"
+#OOFLAGS5 += -c "reset halt"
+OOFLAGS5 += -c "reset run" 
+OOFLAGS5 += -c shutdown
+
+
+flashTarget:
+	@echo TARGET: $(TARGET)
+	$(OPENOCD) $(OOFLAGS0) $(OOFLAGS1) $(OOFLAGS2) $(TARGET).bin $(OOFLAGS3) $(OOFLAGS4)   	
+
+gpnvmset:
+	$(OPENOCD) $(OOFLAGS0) $(OOFLAGS1) $(OOGPNVM2SET) $(OOFLAGS4)
+
+gpnvmclr:
+	$(OPENOCD) $(OOFLAGS0) $(OOFLAGS1) $(OOGPNVM2CLR) $(OOFLAGS4)
+
+reset:
+	$(OPENOCD) $(OOFLAGS0) $(OOFLAGS5)

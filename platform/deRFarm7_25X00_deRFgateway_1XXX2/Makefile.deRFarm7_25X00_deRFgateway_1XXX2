@@ -1,0 +1,98 @@
+# Build specific properties
+BOARD_TYPE = deRFarm7_25X00_deRFgateway_1XXX2
+
+# available memories on target (currently only one supported)
+#MEMORIES = sram flash
+MEMORIES = flash
+
+## Trace level used
+# (can be overriden by adding TRACE_LEVEL=#number to the command-line)
+# TRACE_LEVEL_DEBUG      5
+# TRACE_LEVEL_INFO       4
+# TRACE_LEVEL_WARNING    3
+# TRACE_LEVEL_ERROR      2
+# TRACE_LEVEL_FATAL      1
+# TRACE_LEVEL_NO_TRACE   0
+TRACE_LEVEL = 4
+DYNTRACE = 0
+
+# verbosity level of compilation, uncomment for verbose make console output
+SILENT = false
+
+CONTIKI_TARGET_DIRS = . apps \
+					  dev \
+					  dev/ethernet \
+					  dev/radio/rf231bb \
+					  net \
+					  net/mac \
+					  net/p-gw \
+					  net/uipv4 \
+					  net/uipv6 \
+					  utils
+
+#APPS = dhcp-client udp-server
+
+CONTIKI_CORE=contiki-deRFgw-main
+CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.c
+
+CONTIKI_CPU=$(CONTIKI)/cpu/arm/at91sam7x512
+
+include $(CONTIKI)/platform/$(TARGET)/dev/ethernet/Makefile.ethernet
+include $(CONTIKI)/platform/$(TARGET)/dev/radio/rf231bb/Makefile.rf231bb
+
+include $(CONTIKI)/platform/$(TARGET)/net/Makefile.net
+include $(CONTIKI)/platform/$(TARGET)/net/mac/Makefile.mac
+include $(CONTIKI)/platform/$(TARGET)/net/p-gw/Makefile.p-gw
+include $(CONTIKI)/platform/$(TARGET)/net/uipv4/Makefile.uipv4
+include $(CONTIKI)/platform/$(TARGET)/net/uipv6/Makefile.uipv6
+
+CONTIKI_TARGET_SOURCEFILES = board_cstartup.S board_memories.c board_lowlevel.c \
+							 params.c \
+							 leds.c leds-arch.c \
+							 $(net_src) \
+							 $(mac_src) \
+							 $(p-gw_src) \
+							 $(uipv4_src) \
+							 $(uipv6_src) \
+							 eth_driver.c \
+							 $(ethernet_src) \
+							 $(rf231bb_src) \
+							 $(CONTIKI_TARGET_MAIN)
+
+include $(CONTIKI_CPU)/Makefile.at91sam7x512
+
+# include file with flash rules
+include $(CONTIKI_CPU)/Flash_ARM7.in
+
+# Custom defines and rules for linking
+CUSTOM_RULE_LINK = 1
+PATH_LDSCRIPTS = $(CONTIKI)/platform/$(TARGET)
+
+%.$(TARGET): %.co $(PROJECT_OBJECTFILES) $(PROJECT_LIBRARIES) contiki-$(TARGET).a
+	@echo INFO: Makefile.deRFarm7_25X00_deRFgateway_1XXX2: CUSTOM_RULE_LINK applied...
+# Contiki ORIG:	$(LD) $(LDFLAGS) $(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) -o $@
+	@echo --------------------------------------------------------------------
+	@echo linking
+	@echo --------------------------------------------------------------------
+	$(CC) $(LDFLAGS) -T$(PATH_LDSCRIPTS)/$(MEMORIES).lds -Wl,-Map=$(TARGET).map \
+					$(TARGET_STARTFILES) ${filter-out %.a,$^} ${filter %.a,$^} $(TARGET_LIBFILES) \
+					-o $(TARGET).elf
+	@echo --------------------------------------------------------------------
+	@echo creating BIN file
+	@echo --------------------------------------------------------------------
+#	$(CP) -O binary $(OUTPUT)-$$@.elf $(OUTPUT)-$$@.bin
+	$(CP) -O binary $(TARGET).elf $(TARGET).bin
+	@echo --------------------------------------------------------------------
+	@echo determine file size
+	@echo --------------------------------------------------------------------
+#	@-$(SIZE) $$^ $(OUTPUT)-$$@.elf
+	@-$(SIZE) $^ $(TARGET).elf
+
+dumpDefs:
+	$(CC) $(CFLAGS) -dM -E - < ./net/p-gw/pgw.c 1>defines.txt
+#	$(CC) $(CFLAGS) -dM -E - < contiki-deRFgw-main.c 1>defines.txt
+
+# Include the dependency files, should be the last of the makefile
+-include $(shell mkdir $(OBJ_DIR)/.dep 2>/dev/null) $(wildcard  $(OBJ_DIR)/.dep/*)
+
+# *** EOF ***

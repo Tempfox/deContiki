@@ -1,0 +1,47 @@
+deRFgateway example
+
+The deRFgateway example application comprises of a 6LP-GW using the Ethernet 
+and 802.15.4 interfaces of a deRFarm7 radio module plugged into a deRFgateway board.
+(For more details regarding the hardware platform please refer to the home page of 
+Dresden Elektronik http://www.dresden-elektronik.de).
+
+In addition to the 6LP-GW component a small REST server application based on CoAP 
+and the REST engine (http://people.inf.ethz.ch/mkovatsc/erbium.php)
+contributed by Matthias Kovatsch <kovatsch@inf.ethz.ch> is included. This application
+allows to switch on/off one of the LEDs on the deRFgateway board.
+
+Requirements
+============
+- deRFgateway for ARM board (http://www.dresden-elektronik.de/shop/prod154.html)
+- deRFarm7-25A00 radio module (http://www.dresden-elektronik.de/shop/prod150.html)
+- YARGATO tool chain (http://www.yagarto.de)
+- Open On-Chip Debugger (http://openocd.sourceforge.net)
+- JTAG adapter supported by openOCD, e.g. Atmel SAM-ICE
+
+Configuration settings
+======================
+Currently, configuration settings like MAC addresses and 6LoWPAN parameters are
+hard coded in examples/deRFgateway/params.c. Please change the values within the respective
+params_get_* functions according to your needs. In future versions it will be possible to get
+the settings from the EEPROM.
+
+There's still another setting to be made manually:
+Please find the following line in platform/deRFarm7_25X00_deRFgateway_1XXX2/contiki-deRFgw-main.c
+	uip_ip6addr(&myPrefix, 0x2222, 0x3333, 0x4444, 0, 0, 0, 0, 0);
+and change the value according to the (primary) prefix used in your IPv6 network. This little hack
+is currently necessary to handle situations where the IPv6 router advertises more than one prefix. 
+
+Building the image
+==================
+The binary image can be built by calling
+	make TARGET=deRFarm7_25X00_deRFgateway_1XXX2 SILENT=false OPTI=0
+	
+Flashing the image
+==================
+The include file cpu/arm/Flash_ARM7.in contains a number of defines allowing to flash the
+image by using openOCD.
+Please adjust the following two defines according to your needs
+OPENOCDPATH = <path to the openOCD directory>, e.g. "C:/Program Files/openocd-x64-0.5.0"
+OPENOCD     = <name and path of the openOCD executable>, e.g. $(OPENOCDPATH)/bin/openocd-x64-0.5.0.exe
+When done, the image can be flashed by calling
+	make flashTarget

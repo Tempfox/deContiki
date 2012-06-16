@@ -1,0 +1,23 @@
+CONTIKI_TARGET_DIRS = . dev apps net
+
+SENSORS   = sensors.c  \
+#			button-sensor.c
+#			battery-sensor.c
+#			i2c-driver.c \
+#			bmp085.c \
+#			pressure-sensor.c
+
+CONTIKI_CORE=contiki-main
+CONTIKI_TARGET_MAIN = ${CONTIKI_CORE}.o
+CONTIKI_TARGET_SOURCEFILES += contiki-main.c params.c
+CONTIKI_TARGET_SOURCEFILES +=	$(SENSORS)
+
+CONTIKIAVR=$(CONTIKI)/cpu/avr
+CONTIKIBOARD=.
+
+CONTIKI_PLAT_DEFS = -DF_CPU=8000000UL -DAUTO_CRC_PADDING=2
+
+MCU=atmega128rfa1
+
+include $(CONTIKIAVR)/Makefile.avr
+include $(CONTIKIAVR)/radio/Makefile.radio

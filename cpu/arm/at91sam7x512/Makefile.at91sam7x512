@@ -1,0 +1,115 @@
+### Check if we are running under Windows
+
+ifndef WINDIR
+  ifdef OS
+    ifneq (,$(findstring Windows,$(OS)))
+      WINDIR := Windows
+    endif
+  endif
+endif
+
+.SUFFIXES:
+
+### Optimization setting. $make OPTI=0 for easier debugging of changed source file(s)
+ifndef OPTI
+  OPTI=0
+endif
+
+### Define the CPU directory of the ARM port
+CONTIKI_CPU=$(CONTIKI)/cpu/arm/at91sam7x512
+PATH_LDSCRIPTS = $(CONTIKI_CPU)
+
+### These directories will be searched for the specified source files
+CONTIKI_CPU_DIRS = . peripherals peripherals/aic peripherals/dbgu peripherals/emac peripherals/pio peripherals/pit peripherals/pmc peripherals/rstc peripherals/tc utility radio/rf231bb
+
+AT91SAM7X512 = aic.c pio.c pio_it.c rstc.c tc.c pit.c stdio.c dbgu.c clock.c rtimer-arch.c emac.c 
+#uip-log.c
+
+#ELFLOADER    = elfloader.c elfloader-avr.c symtab-avr.c
+
+### TARGETLIBS are platform-specific routines in the contiki library path
+#TARGETLIBS   = board_cstartup.S
+
+## Objects built from Assembly source files
+#ASM_OBJECTS = board_cstartup.o
+
+ifdef USB
+### Add the directories for USB
+CONTIKI_CPU_DIRS            += peripherals/usb
+CONTIKI_TARGET_SOURCEFILES  += $(USB)
+endif
+
+THREADS =
+
+ifdef WITH_RPL
+ CFLAGS += -DUIP_CONF_IPV6_RPL=$(WITH_RPL) 
+endif
+
+#TRACE_LEVEL = 4
+#DYNTRACE = 1
+
+CONTIKI_TARGET_SOURCEFILES += $(AT91SAM7X512) $(SENSORS) \
+                              $(SYSAPPS) $(ELFLOADER) \
+                              $(TARGETLIBS)
+
+CONTIKI_SOURCEFILES        += $(CONTIKI_TARGET_SOURCEFILES)
+
+CONTIKI_PLAT_DEFS += -DUIP_CONF_IPV6=1
+CONTIKI_PLAT_DEFS += -DRF231BB=1
+
+#------------------------------------------------------------------------------
+# Toolchain
+#------------------------------------------------------------------------------
+
+# Tool suffix when cross-compiling, either 'arm-elf-' or 'arm-none-eabi-'
+TOOLCHAIN = arm-none-eabi-
+# Compilation tools
+CC     = $(TOOLCHAIN)gcc
+AS	   = $(CC)
+LD	   = $(CC)
+CP     = $(TOOLCHAIN)objcopy
+AR	   = $(TOOLCHAIN)ar
+SIZE   = $(TOOLCHAIN)size
+STRIP  = $(TOOLCHAIN)strip
+
+## Options common to compile, link and assembly rules
+# General Flags
+MCU    = arm7tdmi
+#MCU		= at91sam7x512
+COMMON 	= -mcpu=$(MCU)
+
+ifeq ($(OPTI), 0)
+	OPTFLAGS = -O0 -ggdb
+else
+	OPTFLAGS = -Os
+endif
+
+## Compile options common for all C compilation units.
+CFLAGS += $(COMMON) 
+CFLAGS += $(INCLUDES)
+CFLAGS += -DNOASSERT
+#CFLAGS += -Wall -Werror -g -Wundef -std=c99 $(OPTFLAGS)
+CFLAGS += -Wall -g -std=c99 $(OPTFLAGS)  
+CFLAGS += -Wno-parentheses
+
+# AT91-specific
+CFLAGS += -mthumb-interwork  
+CFLAGS += -fomit-frame-pointer
+CFLAGS += -mlong-calls 
+CFLAGS += -ffunction-sections
+CFLAGS += -DTRACE_LEVEL=$(TRACE_LEVEL)
+CFLAGS += -DDYNTRACE=$(DYNTRACE)
+
+## Assembly specific flags
+ASFLAGS += $(COMMON) 
+ASFLAGS += $(CFLAGS)
+ASFLAGS += -x assembler-with-cpp -Wa,-g
+ASFLAGS += -g -gdwarf-2
+ASFLAGS += -D__ASSEMBLY__
+ASFLAGS += -c
+
+## Linker flags
+LDFLAGS += $(COMMON) -g $(OPTFLAGS) -nostartfiles -Wl,--gc-sections
+LDFLAGS += -Wl,--cref
+
+# *** EOF ***

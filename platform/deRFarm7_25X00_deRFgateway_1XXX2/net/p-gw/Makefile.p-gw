@@ -1,0 +1,1 @@
+p-gw_src = pgw_fwd.c pgw_nd.c pgw_sicslowpan.c pgw.c

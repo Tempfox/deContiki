@@ -1,0 +1,37 @@
+deRFnode example
+
+The deRFnode example is derived from the webserver-ipv6 examples on the avr-atmega128rfa1
+platform within the standard Contiki tree
+
+Instead of the Web server application of the standard example, it comprises a small
+REST server application based on CoAP and the REST engine 
+(http://people.inf.ethz.ch/mkovatsc/erbium.php) contributed by Matthias Kovatsch <kovatsch@inf.ethz.ch>.
+There is a small number of resources defined, allowing to switch on/off the LEDs on the deRFnode board,
+read the list of Contiki processes on the node or initiate a reboot. 
+
+Requirements
+============
+- deRFnode for AVR/ARM board (http://www.dresden-elektronik.de/shop/prod151.html)
+- deRFmega128-22A00 radio module (http://www.dresden-elektronik.de/shop/prod148.html)
+- WInAVR tool chain (http://sourceforge.net/projects/winavr)
+- AVR Studio 4 (http://www.atmel.com)
+- JTAG adapter, e.g. Atmel JTAGICE mkII  
+
+Configuration settings
+======================
+The configuration is handled in examples/deRFnode/params.c, which is derived from the respective module
+in the official Contiki source tree. 
+
+Building the image
+==================
+The binary image can be built by calling
+	make TARGET=deRFmega128_deRFnode_2XXX2 SILENT=false OPTI=0
+	
+Flashing the image
+==================
+Please adjust the following define in examples/deRFnode/Makefile according to your needs
+
+JTAGICEMKII= <path to programmer executable>, e.g. "C:/Program Files (x86)/Atmel/AVR Tools/JTAGICEmkII/jtagiceii.exe"
+
+The image can then be flashed by calling
+	make flash
